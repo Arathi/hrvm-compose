@@ -1,25 +1,24 @@
 package com.undsf.hrvm.core
 
-import com.undsf.hrvm.core.exceptions.RuntimeException
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class DataTests {
     @Test
     fun testConstructors() {
         val d512 = Data(512)
-        assertEquals("512", d512.toString())
+        assertTrue { d512.equals(512) }
 
         val dm999 = Data(-999)
-        assertEquals("-999", dm999.toString())
+        assertTrue { dm999.equals(-999) }
 
         val dB = Data('B')
-        assertEquals("'B'", dB.toString())
+        assertTrue { dB.equals('B') }
     }
 
     @Test
-    fun testCompute() {
+    fun testIntegerCompute() {
         var d512 = Data(512)
         assertEquals(DataType.INTEGER, d512.type)
         assertEquals(512, d512.value)
@@ -41,35 +40,5 @@ class DataTests {
         assertEquals(499, d499.value)
         --d500
         assertEquals(498, d500.value)
-
-        var dA = Data('A')
-        assertEquals(DataType.CHARACTER, dA.type)
-        assertEquals('A', dA.value.toChar())
-
-        var dB = dA++
-        assertEquals('B', dA.value.toChar())
-        assertEquals('B', dB.value.toChar())
-
-        val dAa = dB--
-        assertEquals('A', dAa.value.toChar())
-
-        val dD = dAa + Data(3)
-        assertEquals('D', dD.value.toChar())
-
-        val dC = dD - Data(1)
-        assertEquals('C', dC.value.toChar())
-
-        val dF = Data(2) + dD
-        assertEquals(DataType.CHARACTER, dF.type)
-        assertEquals('F', dF.value.toChar())
-
-        var ex: RuntimeException? = null
-        try {
-            val dxx = Data(1024) - Data('A')
-        }
-        catch (e: RuntimeException) {
-            ex = e
-        }
-        assertNotNull(ex)
     }
 }

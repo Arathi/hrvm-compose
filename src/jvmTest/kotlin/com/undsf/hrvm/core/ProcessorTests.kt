@@ -1,13 +1,10 @@
 package com.undsf.hrvm.core
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class ProcessorTests {
     @Test
-    fun test() {
+    fun testInsts() {
         val processor = Processor(
             inbox = Inbox(1, 2, 3, 4, 5, 6, 7, 8),
             memory = Memory(4, 4, 8, 'A')
@@ -103,5 +100,42 @@ class ProcessorTests {
         processor.bmi(24)
         // acc < 0，pc = 24
         assertEquals(24, processor.pc)
+    }
+
+    @Test
+    fun testRun() {
+        val hrasm = Assembler()
+        val program = hrasm.assemble("""
+.set first 0
+.set second 1
+start:
+    JMP input
+getFirst:
+    LDA first
+output:
+    PHA
+input:
+    PLA
+    STA first
+    PLA
+    STA second
+    SUB first
+    BMI getFirst
+getSecond:
+    LDA second
+    JMP output
+""".trimIndent())
+
+        val processor = Processor(
+            inbox = Inbox(1, 2, 15, 10, 'B', 'E', 6, 8),
+            memory = Memory(2),
+            program = program,
+            outbox = Outbox(2, 15, 'E', 8)
+        )
+
+        processor.run()
+        assertTrue {
+            processor.outbox.size == 4
+        }
     }
 }

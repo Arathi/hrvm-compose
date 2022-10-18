@@ -8,9 +8,9 @@ class Assembler {
     val variables = mutableMapOf<String, Int>()
     val labels = mutableMapOf<String, Int>()
     val instructs = mutableListOf<Instruct>()
-    var lastLabel: String? = null
+    var lastLabels = mutableSetOf<String>()
 
-    fun assemble(sources: String) : List<Instruct> {
+    fun assemble(sources: String) : Program {
         variables.clear()
         labels.clear()
         instructs.clear()
@@ -18,6 +18,17 @@ class Assembler {
         val lines = sources.split("\n")
         for (lineNo in 1 .. lines.size) {
             val source = lines[lineNo - 1].trim()
+
+            // 空行
+            if (source.isEmpty()) {
+                continue
+            }
+
+            // 注释
+            if (source.startsWith(";")) {
+                continue
+            }
+
             val inst = assembleLine(lineNo, source)
             if (inst != null) {
                 instructs.add(inst)
@@ -48,10 +59,11 @@ class Assembler {
                         }
                     }
                 }
+                else -> {}
             }
         }
 
-        return instructs
+        return Program(variables, labels, instructs)
     }
 
     fun assembleLine(lineNo: Int, source: String) : Instruct? {
@@ -71,7 +83,7 @@ class Assembler {
         if (matcher.find()) {
             val label = matcher.group(1)
             labels[label] = instructs.size
-            lastLabel = label
+            lastLabels.add(label)
             return null
         }
 
@@ -87,12 +99,10 @@ class Assembler {
             }
             val indirect = counter == 2
             val inst = buildInstruct(opCodeStr, valueStr, indirect) ?: throw AssemblyException(lineNo, source, "无法识别的汇编语句")
+            inst.labels = lastLabels
             inst.lineNo = lineNo
             inst.source = source
-            if (lastLabel != null) {
-                inst.label = lastLabel
-                lastLabel = null
-            }
+            lastLabels = mutableSetOf()
             return inst
         }
 

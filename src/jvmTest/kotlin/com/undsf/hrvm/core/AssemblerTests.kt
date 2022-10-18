@@ -27,7 +27,8 @@ getFirst:
     JMP output
 """.trimIndent()
         val hrasm = Assembler()
-        val insts = hrasm.assemble(sources)
-        assertEquals(12, insts.size)
+        val program = hrasm.assemble(sources)
+        assertEquals(12, program.size)
+        println(program)
     }
 }

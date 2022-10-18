@@ -10,26 +10,31 @@ data class Data(
     constructor(charValue: Char) : this(DataType.CHARACTER, charValue.code)
 
     operator fun inc() : Data {
+        if (type == DataType.CHARACTER) {
+            throw RuntimeException("字符类型无法进行自增运算")
+        }
         value++
         return this.clone()
     }
 
     operator fun dec() : Data {
+        if (type == DataType.CHARACTER) {
+            throw RuntimeException("字符类型无法进行自减运算")
+        }
         value--
         return this.clone()
     }
 
     operator fun plus(other: Data) : Data {
-        val result = Data(type, value + other.value)
-        if (other.type == DataType.CHARACTER) {
-            result.type = other.type
+        if (type == DataType.CHARACTER || other.type == DataType.CHARACTER) {
+            throw RuntimeException("字符类型无法进行加法运算")
         }
-        return result
+        return Data(type, value + other.value)
     }
 
     operator fun minus(other: Data) : Data {
-        if (type == DataType.INTEGER && other.type == DataType.CHARACTER) {
-            throw RuntimeException("被减数类型为int时，减数类型不能为char")
+        if (type != other.type) {
+            throw RuntimeException("被减数与减数类型不同，无法进行减法运算")
         }
         return Data(type, value - other.value)
     }
@@ -42,6 +47,22 @@ data class Data(
         return when (type) {
             DataType.INTEGER -> "$value";
             DataType.CHARACTER -> "'${value.toChar()}'"
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return when (other) {
+            is Int -> {
+                type == DataType.INTEGER && value == other
+            }
+            is Char -> {
+                type == DataType.CHARACTER && value == other.code
+            }
+            is Data -> {
+                type == other.type && value == other.value
+            }
+            null -> false
+            else -> false
         }
     }
 }

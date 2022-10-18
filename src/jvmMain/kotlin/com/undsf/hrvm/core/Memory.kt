@@ -64,6 +64,13 @@ class Memory(var width: Int = 1, var height: Int = 1) {
         return index
     }
 
+    fun getData(index: Int) : Data? {
+        if (index < 0 || index >= size) {
+            throw RuntimeException("无效的下标：$index")
+        }
+        return datas[index]
+    }
+
     operator fun get(index: Int) : Data {
         if (index < 0 || index >= size) {
             throw RuntimeException("无效的下标：$index")

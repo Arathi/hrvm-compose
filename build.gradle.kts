@@ -29,6 +29,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
+                implementation("ch.qos.logback:logback-classic:1.4.4")
             }
         }
         val jvmTest by getting {

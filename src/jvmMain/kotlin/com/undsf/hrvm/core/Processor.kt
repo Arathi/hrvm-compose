@@ -2,22 +2,28 @@ package com.undsf.hrvm.core
 
 import com.undsf.hrvm.core.exceptions.RuntimeException
 import mu.KotlinLogging
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 private val logger = KotlinLogging.logger {}
 
 class Processor(
     val inbox: Inbox = Inbox(),
     val memory: Memory = Memory(),
-    val program: Program = Program(),
+    var program: Program = Program(),
     val outbox: Outbox = Outbox()
 ) {
     var acc: Data? = null
     var pc: Int = 0
     var status: ProcessorStatus = ProcessorStatus.Pending
+    val stepCounter: AtomicInteger = AtomicInteger(0)
 
     fun reset() {
         inbox.reset()
         memory.reset()
+        acc = null
+        pc = 0
+        stepCounter.set(0)
     }
 
     open fun read(index: Int) : Data {
@@ -26,6 +32,44 @@ class Processor(
 
     open fun write(index: Int, data: Data) {
         memory[index] = data
+    }
+
+    fun load(program: Program) {
+        this.program = program
+    }
+
+    fun run(interval: Long = 100) {
+        status = ProcessorStatus.Running
+        do {
+            step()
+            TimeUnit.MILLISECONDS.sleep(interval)
+        }
+        while (status == ProcessorStatus.Running)
+    }
+
+    fun step() {
+        val inst = program[pc++]
+        exec(inst)
+        if (status == ProcessorStatus.Running) {
+            stepCounter.incrementAndGet()
+        }
+    }
+
+    fun exec(inst: Instruct) {
+        when (inst.opCode) {
+            OpCode.PLA -> pla()
+            OpCode.PHA -> pha()
+            OpCode.LDA -> lda(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.STA -> sta(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.ADD -> add(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.SUB -> sub(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.INC -> inc(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.DEC -> dec(inst.value!!, inst.addressing == Addressing.INDIRECT)
+            OpCode.JMP -> jmp(inst.value!!)
+            OpCode.BEQ -> beq(inst.value!!)
+            OpCode.BMI -> bmi(inst.value!!)
+            else -> throw RuntimeException("执行了无效的指令：$inst")
+        }
     }
 
     fun indirectAddressing(index: Int) : Int {
@@ -48,6 +92,7 @@ class Processor(
             status = ProcessorStatus.Stopped
         }
         acc = data
+        logger.info { "acc = inbox() = $acc" }
     }
 
     fun pha() {
@@ -56,6 +101,7 @@ class Processor(
         }
         outbox.push(acc!!)
         acc = null
+        logger.info { "outbox($acc)" }
     }
 
     fun lda(index: Int, indirect: Boolean = false) {
@@ -64,6 +110,12 @@ class Processor(
             offset = indirectAddressing(index)
         }
         acc = read(offset)
+        if (indirect) {
+            logger.info { "acc = memory[memory[${index}]]) = $acc" }
+        }
+        else {
+            logger.info { "acc = memory(${offset}) = $acc" }
+        }
     }
 
     fun sta(index: Int, indirect: Boolean = false) {
@@ -76,6 +128,12 @@ class Processor(
             offset = indirectAddressing(index)
         }
         write(offset, acc!!)
+        if (indirect) {
+            logger.info { "memory[memory[$index] = acc = $acc" }
+        }
+        else {
+            logger.info { "memory[${offset}] = acc = $acc" }
+        }
     }
 
     fun add(index: Int, indirect: Boolean = false) {
@@ -90,6 +148,12 @@ class Processor(
         val data = read(offset)
 
         acc = acc!! + data
+        if (indirect) {
+            logger.info { "acc += memory[memory[$index]] // $acc" }
+        }
+        else {
+            logger.info { "acc += memory[$offset] // $acc" }
+        }
     }
 
     fun sub(index: Int, indirect: Boolean = false) {
@@ -104,6 +168,12 @@ class Processor(
         val data = read(offset)
 
         acc = acc!! - data
+        if (indirect) {
+            logger.info { "acc -= memory[memory[$index]] // $acc" }
+        }
+        else {
+            logger.info { "acc -= memory[$offset] // $acc" }
+        }
     }
 
     fun inc(index: Int, indirect: Boolean = false) {
@@ -115,6 +185,13 @@ class Processor(
         data++
         write(offset, data)
         acc = data
+
+        if (indirect) {
+            logger.info { "acc = ++memory[memory[$index]] // $acc" }
+        }
+        else {
+            logger.info { "acc = ++memory[$offset] // $acc" }
+        }
     }
 
     fun dec(index: Int, indirect: Boolean = false) {
@@ -126,10 +203,18 @@ class Processor(
         data--
         write(offset, data)
         acc = data
+
+        if (indirect) {
+            logger.info { "acc = --memory[memory[$index]] // $acc" }
+        }
+        else {
+            logger.info { "acc = --memory[$offset] // $acc" }
+        }
     }
 
     fun jmp(address: Int) {
         pc = address
+        logger.info { "pc = $address" }
     }
 
     fun beq(address: Int) {
@@ -137,8 +222,9 @@ class Processor(
             throw RuntimeException("累加器中没有值，无法执行条件跳转")
         }
         if (acc?.value == 0) {
-            jmp(address)
+            pc = address
         }
+        logger.info { "if (acc == 0) pc = $address" }
     }
 
     fun bmi(address: Int) {
@@ -146,7 +232,8 @@ class Processor(
             throw RuntimeException("累加器中没有值，无法执行条件跳转")
         }
         if (acc?.value!! < 0) {
-            jmp(address)
+            pc = address
         }
+        logger.info { "if (acc < 0) pc = $address" }
     }
 }

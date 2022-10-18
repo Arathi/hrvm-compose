@@ -1,8 +1,10 @@
 package com.undsf.hrvm.core
 
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MemoryTests {
+    @Test
     fun test() {
         val m1 = Memory()
         assertEquals(1, m1.size)
@@ -17,6 +19,5 @@ class MemoryTests {
             Data(6), Data('7'), Data(8)
         )
         assertEquals(9, mInit.size)
-
     }
 }
