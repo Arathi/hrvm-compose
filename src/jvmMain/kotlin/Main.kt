@@ -15,6 +15,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.undsf.hrvm.core.*
 import com.undsf.hrvm.forms.MachineForm
+import com.undsf.hrvm.views.MainView
 
 @Composable
 @Preview
@@ -64,6 +65,6 @@ getSecond:
         title = "Human Resource Virtual Machine",
         state = rememberWindowState(size = DpSize(1366.dp, 768.dp)),
         onCloseRequest = ::exitApplication) {
-        machineForm.form()
+        MainView(processor)
     }
 }
