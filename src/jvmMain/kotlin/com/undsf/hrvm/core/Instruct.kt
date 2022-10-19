@@ -11,6 +11,11 @@ class Instruct(
     var valueStr: String? = null,
     var lineNo : Int? = null,
     var source: String? = null) {
+    val label get() : String {
+        if (labels == null) return ""
+        if (labels!!.size == 0) return ""
+        return labels!!.first()
+    }
 
     override fun toString(): String {
         return toString(true, "    ")
