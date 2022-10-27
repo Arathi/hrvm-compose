@@ -1,4 +1,4 @@
-package com.undsf.hrvm.core
+package com.undsf.hrvm.models
 
 enum class DataType {
     INTEGER,

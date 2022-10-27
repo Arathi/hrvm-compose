@@ -1,4 +1,4 @@
-package com.undsf.hrvm.core.exceptions
+package com.undsf.hrvm.exceptions
 
 class RuntimeException(message: String) : kotlin.RuntimeException(message) {
 }

@@ -1,6 +1,5 @@
 import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("multiplatform")
@@ -8,10 +7,10 @@ plugins {
 }
 
 group = "com.undsf.hrvm"
-version = "1.0.0-SNAPSHOT"
+version = "1.1.0-SNAPSHOT"
 
 repositories {
-    maven("https://maven.aliyun.com/repository/public")
+    // maven("https://maven.aliyun.com/repository/public")
     google()
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
@@ -42,11 +41,11 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "com.undsf.hrvm.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "hrvm-compose"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
         }
     }
 }

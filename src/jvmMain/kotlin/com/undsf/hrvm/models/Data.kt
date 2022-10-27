@@ -1,11 +1,16 @@
-package com.undsf.hrvm.core
+package com.undsf.hrvm.models
 
-import com.undsf.hrvm.core.exceptions.RuntimeException
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
-data class Data(
-    var type: DataType = DataType.INTEGER,
-    var value: Int = 0
+class Data(
+    type: DataType = DataType.INTEGER,
+    value: Int = 0
 ) : Cloneable {
+    val type: DataType by mutableStateOf(type)
+    var value: Int by mutableStateOf(value)
+
     constructor(intValue: Int) : this(DataType.INTEGER, intValue)
     constructor(charValue: Char) : this(DataType.CHARACTER, charValue.code)
 
@@ -14,7 +19,7 @@ data class Data(
             throw RuntimeException("字符类型无法进行自增运算")
         }
         value++
-        return this.clone()
+        return this
     }
 
     operator fun dec() : Data {
@@ -22,7 +27,7 @@ data class Data(
             throw RuntimeException("字符类型无法进行自减运算")
         }
         value--
-        return this.clone()
+        return this
     }
 
     operator fun plus(other: Data) : Data {
@@ -32,11 +37,27 @@ data class Data(
         return Data(type, value + other.value)
     }
 
+    operator fun plus(other: Int) : Data {
+        if (type == DataType.CHARACTER) {
+            throw RuntimeException("字符类型无法进行加法运算")
+        }
+        return Data(type, value + other)
+    }
+
     operator fun minus(other: Data) : Data {
         if (type != other.type) {
             throw RuntimeException("被减数与减数类型不同，无法进行减法运算")
         }
-        return Data(type, value - other.value)
+        // 减法运算的结果只会是数值
+        return Data(DataType.INTEGER, value - other.value)
+    }
+
+    operator fun minus(other: Int) : Data {
+        if (type != DataType.INTEGER) {
+            throw RuntimeException("被减数与减数类型不同，无法进行减法运算")
+        }
+        // 减法运算的结果只会是数值
+        return Data(DataType.INTEGER, value - other)
     }
 
     public override fun clone(): Data {
@@ -64,5 +85,9 @@ data class Data(
             null -> false
             else -> false
         }
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 }

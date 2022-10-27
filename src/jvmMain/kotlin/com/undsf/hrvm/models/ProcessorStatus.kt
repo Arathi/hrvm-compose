@@ -1,8 +1,8 @@
-package com.undsf.hrvm.core
+package com.undsf.hrvm.models
 
 enum class ProcessorStatus {
     Pending,
     Running,
     Paused,
-    Stopped
+    Terminated
 }

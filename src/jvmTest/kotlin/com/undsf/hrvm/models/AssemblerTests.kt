@@ -1,7 +1,7 @@
-package com.undsf.hrvm.core
+package com.undsf.hrvm.models
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class AssemblerTests {
     @Test
@@ -9,26 +9,30 @@ class AssemblerTests {
         val sources = """
 .set first 0
 .set second 1
+
 start:
-    JMP input
-output:
-    PHA
-input:
     PLA
     STA first
     PLA
     STA second
+
+compare:
     SUB first
-    BMI getFirst
-    LDA second
-    JMP output
-getFirst:
+    BMI loadSecond
+
+loadFirst:
     LDA first
     JMP output
+
+loadSecond:
+    LDA second
+
+output:
+    PHA
+    JMP start
 """.trimIndent()
         val hrasm = Assembler()
         val program = hrasm.assemble(sources)
-        assertEquals(12, program.size)
-        println(program)
+        assertNotNull(program)
     }
 }
