@@ -16,7 +16,7 @@ class Assembler {
     val interInsts = mutableListOf<IntermediateInstruction>()
     var lastLabels = mutableSetOf<String>()
 
-    fun assemble(sources: String) : Program {
+    fun assemble(sources: String, visual: Boolean = false) : Program {
         variables.clear()
         labels.clear()
         interInsts.clear()
@@ -44,9 +44,13 @@ class Assembler {
 
         for (index in interInsts.indices) {
             val inst = interInsts[index]
-            if (inst.label != null) {
+            if (inst.isLabel) {
                 labels[inst.label!!] = index
             }
+        }
+
+        for (entry in variables) {
+            program.addVariable(entry.key, entry.value)
         }
 
         for (inst in interInsts) {
@@ -75,7 +79,21 @@ class Assembler {
                 }
                 else -> {}
             }
-            program.addInstruction(inst.toInstruction())
+            if (visual) {
+                program.addInstruction(
+                    VisualInstruction(
+                        inst.oper,
+                        inst.data,
+                        inst.indirect,
+                        inst.label,
+                        inst.param
+                    ),
+                    inst.label
+                )
+            }
+            else {
+                program.addInstruction(inst.toInstruction(), inst.label)
+            }
         }
 
         logger.info { "汇编完成" }

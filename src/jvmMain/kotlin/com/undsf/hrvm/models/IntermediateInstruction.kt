@@ -3,7 +3,7 @@ package com.undsf.hrvm.models
 /**
  * 中间指令
  */
-class IntermediateInstruction(
+open class IntermediateInstruction(
     oper: String = OPER_NAME_NOP,
     override var data: Int? = null,
     indirect: Boolean = false,
@@ -16,6 +16,8 @@ class IntermediateInstruction(
 ) {
     var lineNo: Int? = null
     var source: String? = null
+
+    val isLabel: Boolean get() = oper == OPER_NAME_NOP && label != null
 
     fun toInstruction() : Instruction {
         return Instruction(oper, data, indirect)

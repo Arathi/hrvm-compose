@@ -52,6 +52,13 @@ class Machine(
     fun loadProgram(program: Program) {
         this.program = program
         logger.info { "程序已加载" }
+
+        memory.unregisterAllVariables()
+        for (entry in program.variableNameToAddress) {
+            logger.info { ".set ${entry.key} ${entry.value}" }
+            memory.registerVariable(entry.key, entry.value)
+        }
+        logger.info { "变量注册完成" }
     }
 
     fun getInstruction(pc: Int) : Instruction? {

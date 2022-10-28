@@ -25,6 +25,7 @@ class Program {
         variableAddressToName[address] = variableName
     }
 
+    @Deprecated("弃用")
     fun addLabel(label: String) {
         val addr = instructions.size
         labelNameToAddress[label] = addr
@@ -32,7 +33,12 @@ class Program {
         instructions.add(Instruction.NOP)
     }
 
-    fun addInstruction(inst: Instruction) {
+    fun addInstruction(inst: Instruction, label: String? = null) {
+        if (label != null) {
+            val addr = instructions.size
+            labelNameToAddress[label] = addr
+            labelAddressToName[addr] = label
+        }
         instructions.add(inst)
     }
 

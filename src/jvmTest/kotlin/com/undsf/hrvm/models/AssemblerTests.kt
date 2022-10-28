@@ -32,7 +32,7 @@ output:
     JMP start
 """.trimIndent()
         val hrasm = Assembler()
-        val program = hrasm.assemble(sources)
+        val program = hrasm.assemble(sources, true)
         assertNotNull(program)
     }
 }

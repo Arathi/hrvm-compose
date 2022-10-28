@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 
 import mu.KotlinLogging
 import com.undsf.hrvm.exceptions.RuntimeException
+import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,18 +24,29 @@ class Processor(val machine: Machine) {
     }
 
     fun step() {
+        if (status == ProcessorStatus.Terminated) {
+            logger.warn { "处理器已停止工作，无法单步执行" }
+            return
+        }
+
         status = ProcessorStatus.Running
-        val inst = machine.getInstruction(pc++) ?: throw RuntimeException("指令获取失败")
+        val inst = machine.getInstruction(pc) ?: throw RuntimeException("指令获取失败")
         execute(inst)
         if (status != ProcessorStatus.Terminated) {
             status = ProcessorStatus.Paused
         }
     }
 
-    fun run() {
+    fun run(interval: Long = 100) {
+        if (status == ProcessorStatus.Terminated) {
+            logger.warn { "处理器已停止工作，无法单步执行" }
+            return
+        }
+
         status = ProcessorStatus.Running
         do {
-            val inst = machine.getInstruction(pc++) ?: throw RuntimeException("指令获取失败")
+            TimeUnit.MILLISECONDS.sleep(interval)
+            val inst = machine.getInstruction(pc) ?: throw RuntimeException("指令获取失败")
             execute(inst)
         }
         while (status != ProcessorStatus.Terminated && status != ProcessorStatus.Paused)
@@ -55,6 +67,7 @@ class Processor(val machine: Machine) {
                 "JMP" -> jmp(inst.data!!)
                 "BEQ" -> beq(inst.data!!)
                 "BMI" -> bmi(inst.data!!)
+                "NOP" -> pc++
             }
         }
         catch (ex: Exception) {
@@ -64,7 +77,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun pla() {
+    private fun pla() {
         pc++
         counter++
         acc = machine.popFromInbox()
@@ -76,7 +89,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun pha() {
+    private fun pha() {
         if (acc != null) {
             pc++
             counter++
@@ -91,7 +104,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun indirectAddressing(addr: Int): Int {
+    private fun indirectAddressing(addr: Int): Int {
         val realAddrData = machine.readFromMemory(addr) ?:
             throw RuntimeException("${addr}中的没有值，无法间接寻址")
         if (realAddrData.type != DataType.INTEGER) {
@@ -100,7 +113,7 @@ class Processor(val machine: Machine) {
         return realAddrData.value
     }
 
-    fun lda(addr: Int, indirect: Boolean = false) {
+    private fun lda(addr: Int, indirect: Boolean = false) {
         val offset = if (indirect) indirectAddressing(addr) else addr
         pc++
         counter++
@@ -114,7 +127,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun sta(addr: Int, indirect: Boolean = false) {
+    private fun sta(addr: Int, indirect: Boolean = false) {
         if (acc != null) {
             pc++
             counter++
@@ -130,7 +143,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun add(addr: Int, indirect: Boolean = false) {
+    private fun add(addr: Int, indirect: Boolean = false) {
         if (acc != null) {
             pc++
             counter++
@@ -143,7 +156,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun sub(addr: Int, indirect: Boolean = false) {
+    private fun sub(addr: Int, indirect: Boolean = false) {
         if (acc != null) {
             pc++
             counter++
@@ -156,7 +169,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun inc(addr: Int, indirect: Boolean = false) {
+    private fun inc(addr: Int, indirect: Boolean = false) {
         val offset = if (indirect) indirectAddressing(addr) else addr
         acc = machine.readFromMemory(offset)
         if (acc != null) {
@@ -170,7 +183,7 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun dec(addr: Int, indirect: Boolean = false) {
+    private fun dec(addr: Int, indirect: Boolean = false) {
         val offset = if (indirect) indirectAddressing(addr) else addr
         acc = machine.readFromMemory(offset)
         if (acc != null) {
@@ -184,20 +197,23 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun jmp(addr: Int) {
+    private fun jmp(addr: Int) {
         pc = addr
         counter++
         logger.info { "goto $pc" }
     }
 
-    fun beq(addr: Int) {
+    private fun beq(addr: Int) {
         if (acc != null) {
-            logger.info { "if (acc == 0) goto line_$addr" }
-            counter++
             if (acc!!.type == DataType.INTEGER) {
+                logger.info { "if (acc == 0) goto line_$addr // acc=$acc" }
                 if (acc!!.value == 0) {
                     pc = addr
                 }
+                else {
+                    pc++
+                }
+                counter++
             }
             else {
                 throw RuntimeException("累加器中的值的类型不为整数")
@@ -208,13 +224,16 @@ class Processor(val machine: Machine) {
         }
     }
 
-    fun bmi(addr: Int) {
+    private fun bmi(addr: Int) {
         if (acc != null) {
-            logger.info { "if (acc < 0) goto line_$addr" }
-            counter++
             if (acc!!.type == DataType.INTEGER) {
+                logger.info { "if (acc < 0) goto line_$addr" }
+                counter++
                 if (acc!!.value < 0) {
                     pc = addr
+                }
+                else {
+                    pc++
                 }
             }
             else {

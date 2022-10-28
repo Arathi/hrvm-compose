@@ -12,17 +12,9 @@ import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-fun gui() = run {
+fun gui(problem: Problem = Problem.default) = run {
     application {
         val state = rememberWindowState( size = DpSize(1366.dp, 768.dp) )
-        val problem = Problem(
-            "测试问题描述",
-            mutableListOf(1, 2, 'A', 'B', 'F', 'C', 4, 3),
-            mutableListOf(2, 'B', 'F', 4),
-            4,
-            1
-        )
-
         Window(
             title = "人力资源虚拟机 v1.1",
             state = state,
@@ -40,7 +32,18 @@ fun main(args: Array<String>) = run {
     if (args.isNotEmpty()) {
         val mode = args[0]
         when (mode) {
-            "gui" -> gui()
+            "gui" -> {
+                try {
+                    if (args.size > 1) {
+                        val problemId = args[1].toInt()
+                        val problem = Problem.Problems[problemId]
+                        gui(problem)
+                    }
+                }
+                catch (ex: Exception) {
+                    gui()
+                }
+            }
             "asm" -> asm(args)
         }
     }

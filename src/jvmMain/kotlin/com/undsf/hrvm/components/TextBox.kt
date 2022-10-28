@@ -18,14 +18,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun TextField(
+fun TextBox(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current,
-    label: @Composable (() -> Unit) = { Text("label") },
+    label: @Composable (() -> Unit) = {},
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -37,7 +37,8 @@ fun TextField(
     maxLines: Int = Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small,
-    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors()
+    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors(),
+    contentPadding: PaddingValues = PaddingValues(8.dp, 8.dp, 8.dp, 8.dp)
 ) {
     val textColor = textStyle.color.takeOrElse {
         colors.textColor(enabled).value
@@ -78,6 +79,7 @@ fun TextField(
                 isError = isError,
                 interactionSource = interactionSource,
                 colors = colors,
+                contentPadding = contentPadding,
                 border = {
                     TextFieldDefaults.BorderBox(
                         enabled,
@@ -94,7 +96,7 @@ fun TextField(
 
 @Composable
 @Preview
-fun TextFieldPreview() {
+fun TextBoxPreview() {
     var text by remember { mutableStateOf("默认文本") }
     Box(modifier = Modifier.padding(10.dp)) {
         TextField(
@@ -103,9 +105,9 @@ fun TextFieldPreview() {
             onValueChange = {
                 text = it
             },
-            label = {
-                Text("测试输入框")
-            },
+            // label = {
+            //     Text("测试输入框")
+            // },
         )
     }
 }
